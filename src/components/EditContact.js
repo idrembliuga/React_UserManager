@@ -2,20 +2,29 @@ import React, { Component } from "react";
 import { Consumer } from "../context";
 import axios from "axios";
 import TextInputGroup from "./TextInputGroup";
-
-export default class AddContact extends Component {
+export default class EditContact extends Component {
   // state to save the addition
   state = {
     name: "",
     phone: "",
-    email: "",
-    errors: {}
+    email: ""
   };
+
+  async componentDidMount() {
+    const { id } = this.props.match.params;
+    const res = await axios.get(
+      `https://jsonplaceholder.typicode.com/users/${id}`
+    );
+    this.setState({
+      name: res.data.name,
+      email: res.data.email,
+      phone: res.data.phone
+    });
+  }
   onChange = e => this.setState({ [e.target.name]: e.target.value.trimLeft() });
   onSubmit = async (dispatch, e) => {
     e.preventDefault();
     const { name, email, phone } = this.state;
-    //*check for errors*//
     const errors = {};
     if (!name) errors.name = "Name is requiered";
     if (!email) errors.email = "Email is requiered";
@@ -23,16 +32,17 @@ export default class AddContact extends Component {
     this.setState({ errors });
 
     if (!Object.keys(errors).length) {
-      const newContact = {
+      const updateContact = {
         name: name.trim(),
         email: email.trim(),
         phone: phone.trim()
       };
-      const res = await axios.post(
-        "https://jsonplaceholder.typicode.com/users",
-        newContact
+      const { id } = this.props.match.params;
+      const res = await axios.put(
+        `https://jsonplaceholder.typicode.com/users/${id}`,
+        updateContact
       );
-      dispatch({ type: "ADD_CONTACT", payload: res.data });
+      dispatch({ type: "UPDATE_CONTACT", payload: res.data });
       this.setState({
         name: "",
         email: "",
@@ -61,33 +71,33 @@ export default class AddContact extends Component {
                     placeholder="Enter Name..."
                     value={name}
                     onChange={this.onChange}
-                    error={errors.name}
+                    error={errors}
                   ></TextInputGroup>
                   <TextInputGroup
-                    label=" Email "
+                    label="Email"
                     autoFocus={true}
                     type="email"
                     name="email"
                     placeholder="Enter Email..."
                     value={email}
                     onChange={this.onChange}
-                    error={errors.email}
+                    error={errors}
                   ></TextInputGroup>
 
                   <TextInputGroup
                     label="Phone"
                     autoFocus={true}
-                    type="number"
+                    type="text"
                     name="phone"
-                    placeholder="Enter Phone Number..."
+                    placeholder={phone}
                     value={phone}
                     onChange={this.onChange}
-                    error={errors.phone}
+                    error={errors}
                   ></TextInputGroup>
                   <input
                     type="submit"
-                    className="btn btn-light btn-lg btn-block"
-                    value="Add Contact"
+                    className="btn btn-danger btn-lg btn-block"
+                    value="Edit Contact"
                   ></input>
                 </form>
               </div>
